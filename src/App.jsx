@@ -4,7 +4,7 @@ export default function App() {
   const [ballPos, setBallPos] = useState({ x: 175, y: 450 });
   const [isDragging, setIsDragging] = useState(false);
   const [velocity, setVelocity] = useState({ x: 0, y: 0 });
-  const [dragStart, setDragStart] = useState(null); // inicio del arrastre
+  const [dragStart, setDragStart] = useState(null);
   const [goals, setGoals] = useState(0);
   const [speed, setSpeed] = useState(3);
 
@@ -17,19 +17,27 @@ export default function App() {
 
   const arco = { x: 125, y: 40, width: 150, height: 30 };
 
-  // Cuando inicia el arrastre
-  const startDrag = (e) => {
-    setIsDragging(true);
-    setDragStart({ x: e.clientX, y: e.clientY });
+  // obtener coordenadas universales (mouse o touch)
+  const getCoords = (e) => {
+    if (e.touches && e.touches.length > 0) {
+      return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    }
+    return { x: e.clientX, y: e.clientY };
   };
 
-  // Cuando suelta: calcular fuerza y dirección
+  const startDrag = (e) => {
+    const coords = getCoords(e);
+    setIsDragging(true);
+    setDragStart(coords);
+  };
+
   const stopDrag = (e) => {
     if (isDragging && dragStart) {
-      const dx = e.clientX - dragStart.x;
-      const dy = e.clientY - dragStart.y;
+      const coords = getCoords(e);
+      const dx = coords.x - dragStart.x;
+      const dy = coords.y - dragStart.y;
 
-      setVelocity({ x: dx / 5, y: dy / 5 }); // divide para ajustar fuerza
+      setVelocity({ x: dx / 5, y: dy / 5 });
     }
     setIsDragging(false);
     setDragStart(null);
@@ -46,7 +54,7 @@ export default function App() {
             y: prev.y + velocity.y,
           };
 
-          // Verificar colisión con obstáculos
+          // Colisión con obstáculos
           for (let obs of obstaculos) {
             if (
               newPos.x + 50 > obs.x &&
@@ -54,7 +62,6 @@ export default function App() {
               newPos.y + 50 > obs.y &&
               newPos.y < obs.y + obs.height
             ) {
-              // 🚫 Choque → reinicia
               setVelocity({ x: 0, y: 0 });
               setGoals(0);
               setSpeed(3);
@@ -123,6 +130,7 @@ export default function App() {
     <div
       ref={fieldRef}
       onMouseUp={stopDrag}
+      onTouchEnd={stopDrag}
       style={styles.field}
     >
       <h1 style={{ color: "white" }}>⚽ Juego de Penaltis</h1>
@@ -160,6 +168,7 @@ export default function App() {
       {/* Balón */}
       <div
         onMouseDown={startDrag}
+        onTouchStart={startDrag}
         style={{
           ...styles.ball,
           top: ballPos.y,
