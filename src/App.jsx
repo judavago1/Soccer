@@ -17,23 +17,29 @@ export default function App() {
 
   const arco = { x: 125, y: 40, width: 150, height: 30 };
 
-  // obtener coordenadas universales (mouse o touch)
-  const getCoords = (e) => {
+  // obtener coordenadas táctiles
+  const getTouchCoords = (e) => {
     if (e.touches && e.touches.length > 0) {
       return { x: e.touches[0].clientX, y: e.touches[0].clientY };
     }
-    return { x: e.clientX, y: e.clientY };
+    if (e.changedTouches && e.changedTouches.length > 0) {
+      return { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
+    }
+    return null;
   };
 
   const startDrag = (e) => {
-    const coords = getCoords(e);
+    const coords = getTouchCoords(e);
+    if (!coords) return;
     setIsDragging(true);
     setDragStart(coords);
   };
 
   const stopDrag = (e) => {
     if (isDragging && dragStart) {
-      const coords = getCoords(e);
+      const coords = getTouchCoords(e);
+      if (!coords) return;
+
       const dx = coords.x - dragStart.x;
       const dy = coords.y - dragStart.y;
 
@@ -129,11 +135,10 @@ export default function App() {
   return (
     <div
       ref={fieldRef}
-      onMouseUp={stopDrag}
       onTouchEnd={stopDrag}
       style={styles.field}
     >
-      <h1 style={{ color: "white" }}>⚽ Juego de Penaltis</h1>
+      <h1 style={{ color: "white" }}>⚽ Juego de Penaltis (Touch)</h1>
       <h2 style={{ color: "yellow" }}>Goles: {goals}</h2>
       <h3 style={{ color: "orange" }}>Velocidad Obstáculos: {speed.toFixed(1)}</h3>
 
@@ -167,7 +172,6 @@ export default function App() {
 
       {/* Balón */}
       <div
-        onMouseDown={startDrag}
         onTouchStart={startDrag}
         style={{
           ...styles.ball,
@@ -202,6 +206,5 @@ const styles = {
     height: "50px",
     borderRadius: "50%",
     background: "radial-gradient(circle, white 70%, black 30%)",
-    cursor: "grab",
   },
 };
